@@ -1,0 +1,19 @@
+[Unit]
+Description=YFITG Network Scout Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/yfitg-scout
+Environment="PATH=/opt/yfitg-scout/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/opt/yfitg-scout/.venv/bin/python /opt/yfitg-scout/main.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>YFITG Network Security Assessment</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 40px; color: {{ colors.text }};">
+    <div style="background: {{ colors.primary }}; color: white; padding: 20px; margin-bottom: 30px;">
+        <h1 style="margin: 0;">YFITG Network Security Assessment</h1>
+        <p style="margin: 5px 0 0 0;">Device ID: {{ device_id }} | Report Generated: {{ timestamp }}</p>
+        {% if consent_id %}
+        <p style="margin: 5px 0 0 0;">Consent ID: {{ consent_id }}</p>
+        {% endif %}
+    </div>
+    
+    <h2 style="color: {{ colors.secondary }}; border-bottom: 2px solid {{ colors.accent }}; padding-bottom: 10px;">Executive Summary</h2>
+    <div style="background: #f5f5f5; padding: 20px; margin: 20px 0; border-left: 4px solid {{ colors.accent }};">
+        {{ results.executive_summary | markdown | safe }}
+    </div>
+    
+    <h2 style="color: {{ colors.secondary }}; border-bottom: 2px solid {{ colors.accent }}; padding-bottom: 10px;">Severity Overview</h2>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <tr style="background: {{ colors.primary }}; color: white;">
+            <th style="padding: 12px; text-align: left;">Metric</th>
+            <th style="padding: 12px; text-align: right;">Count</th>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">Total Hosts Discovered</td>
+            <td style="padding: 10px; text-align: right;">{{ results.summary.total_hosts }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">Open Ports</td>
+            <td style="padding: 10px; text-align: right;">{{ results.summary.open_ports }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd; background: #ffebee;">
+            <td style="padding: 10px;"><strong>High Severity Issues</strong></td>
+            <td style="padding: 10px; text-align: right;"><strong>{{ results.summary.high_severity }}</strong></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd; background: #fff3e0;">
+            <td style="padding: 10px;">Medium Severity Issues</td>
+            <td style="padding: 10px; text-align: right;">{{ results.summary.medium_severity }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">Low Severity Issues</td>
+            <td style="padding: 10px; text-align: right;">{{ results.summary.low_severity }}</td>
+        </tr>
+    </table>
+    
+    <h2 style="color: {{ colors.secondary }}; border-bottom: 2px solid {{ colors.accent }}; padding-bottom: 10px;">Findings by Host</h2>
+    {% for host in results.hosts[:20] %}
+    <div style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <h3 style="color: {{ colors.accent }}; margin-top: 0;">{{ host.ip }}{% if host.hostname %} ({{ host.hostname }}){% endif %}</h3>
+        <p><strong>State:</strong> {{ host.state }}</p>
+        <h4>Open Ports & Services:</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f5f5f5;">
+                <th style="padding: 8px; text-align: left;">Port</th>
+                <th style="padding: 8px; text-align: left;">Service</th>
+                <th style="padding: 8px; text-align: left;">Product/Version</th>
+            </tr>
+            {% for port in host.ports %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 8px;">{{ port.port }}/{{ port.protocol }}</td>
+                <td style="padding: 8px;">{{ port.service }}</td>
+                <td style="padding: 8px;">{{ (port.product + " " + port.version) | trim or "N/A" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% if host.web_findings %}
+        <h4>Web Server Findings:</h4>
+        <ul>
+            {% for finding in host.web_findings[:5] %}
+            <li>{{ finding.description }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    {% if results.tls_issues %}
+    <h2 style="color: {{ colors.secondary }}; border-bottom: 2px solid {{ colors.accent }}; padding-bottom: 10px;">TLS/SSL Certificate Issues</h2>
+    <ul>
+        {% for issue in results.tls_issues[:10] %}
+        <li><strong>{{ issue.host }}:{{ issue.port }}</strong> - {{ issue.issue }}: {{ issue.details }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid {{ colors.accent }}; color: #666; font-size: 12px;">
+        <p><strong>Disclaimer:</strong> This assessment was performed using non-intrusive scanning techniques. No exploitation, password attempts, or network disruption occurred during this scan.</p>
+        <p>© {{ "now" | date("%Y") }} YFITG. All rights reserved. Confidential - For authorized use only.</p>
+    </div>
+</body>
+</html>
+

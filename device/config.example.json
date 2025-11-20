@@ -1,0 +1,37 @@
+{
+  "device_id": "scout-001",
+  "mqtt": {
+    "broker": "mqtt.example.com",
+    "port": 8883,
+    "username": "device_user",
+    "password": "device_password",
+    "ca_cert": "/opt/yfitg-scout/certs/ca.crt",
+    "client_cert": "/opt/yfitg-scout/certs/client.crt",
+    "client_key": "/opt/yfitg-scout/certs/client.key"
+  },
+  "collector": {
+    "api_url": "https://api.example.com/reports",
+    "api_token": "your_api_token_here"
+  },
+  "llm": {
+    "model_path": "/opt/yfitg-scout/models/llama-3.2-3b-instruct-q4_k_m.gguf",
+    "threads": 4,
+    "fallback_api": "https://api.example.com/summarize"
+  },
+  "scanning": {
+    "max_duration_hours": 2,
+    "default_timeout": 900,
+    "allowed_ranges": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  },
+  "display": {
+    "type": "waveshare_epd",
+    "width": 800,
+    "height": 480,
+    "animation_fps": 6
+  },
+  "button": {
+    "gpio_pin": 18,
+    "long_press_duration": 3.0
+  }
+}
+

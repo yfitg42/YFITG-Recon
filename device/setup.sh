@@ -32,16 +32,28 @@ echo "Installing system dependencies..."
 apt-get update
 apt-get install -y nmap nikto python3-dev libssl-dev
 
+# Copy Python source files
+echo "Copying Python source files..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cp "$SCRIPT_DIR"/*.py /opt/yfitg-scout/
+cp "$SCRIPT_DIR"/__init__.py /opt/yfitg-scout/ 2>/dev/null || true
+
+# Copy templates directory
+if [ -d "$SCRIPT_DIR/templates" ]; then
+    echo "Copying templates..."
+    cp -r "$SCRIPT_DIR/templates" /opt/yfitg-scout/
+fi
+
 # Copy configuration template
 if [ ! -f /opt/yfitg-scout/.config.json ]; then
     echo "Copying configuration template..."
-    cp config.example.json /opt/yfitg-scout/.config.json
+    cp "$SCRIPT_DIR/config.example.json" /opt/yfitg-scout/.config.json
     echo "Please edit /opt/yfitg-scout/.config.json with your settings"
 fi
 
 # Install systemd service
 echo "Installing systemd service..."
-cp yfitg-scout.service /etc/systemd/system/
+cp "$SCRIPT_DIR/yfitg-scout.service" /etc/systemd/system/
 systemctl daemon-reload
 
 # Set permissions

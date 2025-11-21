@@ -6,6 +6,7 @@ Handles MQTT communication, scan coordination, and report generation.
 
 import json
 import logging
+import os
 import signal
 import sys
 import time
@@ -20,22 +21,53 @@ from button import ButtonHandler
 from report import ReportGenerator
 from uploader import ReportUploader
 
+
+def get_base_dir() -> Path:
+    """Get the base directory for YFITG Scout files.
+    
+    Checks in order:
+    1. YFITG_SCOUT_BASE_DIR environment variable
+    2. /opt/yfitg-scout (Linux production)
+    3. Current directory (development)
+    """
+    # Check environment variable first
+    env_dir = os.environ.get('YFITG_SCOUT_BASE_DIR')
+    if env_dir:
+        return Path(env_dir)
+    
+    # Check Linux production path
+    linux_path = Path('/opt/yfitg-scout')
+    if linux_path.exists():
+        return linux_path
+    
+    # Fall back to current directory for development
+    return Path(__file__).parent.absolute()
+
+
+BASE_DIR = get_base_dir()
+logger = logging.getLogger(__name__)
+
 # Configure logging
+log_dir = BASE_DIR / 'logs'
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / 'scout.log'
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/opt/yfitg-scout/logs/scout.log'),
+        logging.FileHandler(log_file),
         logging.StreamHandler(sys.stdout)
     ]
 )
-logger = logging.getLogger(__name__)
 
 
 class ScoutDevice:
     """Main device orchestrator."""
     
-    def __init__(self, config_path: str = "/opt/yfitg-scout/.config.json"):
+    def __init__(self, config_path: Optional[str] = None):
+        if config_path is None:
+            config_path = str(BASE_DIR / '.config.json')
         self.config = self._load_config(config_path)
         self.running = True
         self.current_scan: Optional[ScanOrchestrator] = None
@@ -268,8 +300,8 @@ class ScoutDevice:
 
 
 if __name__ == "__main__":
-    # Ensure log directory exists
-    Path("/opt/yfitg-scout/logs").mkdir(parents=True, exist_ok=True)
+    # Log directory already created in logging setup
+    logger.info(f"Using base directory: {BASE_DIR}")
     
     scout = ScoutDevice()
     scout.run()

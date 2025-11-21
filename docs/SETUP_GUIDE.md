@@ -144,6 +144,8 @@ sudo chmod +x setup.sh
 sudo ./setup.sh
 ```
 
+**Note:** The setup script will automatically detect your username (even if it's not "pi"). It uses the user who ran `sudo`, so make sure you run it with `sudo` from your regular user account, not as root. The script will update the systemd service file with the correct username automatically.
+
 ### 2.4 Configure Device
 
 ```bash
@@ -202,11 +204,14 @@ sudo mkdir -p /opt/yfitg-scout/certs
 sudo nano /opt/yfitg-scout/certs/ca.crt
 # Paste certificate content, save
 
-# Set permissions
-sudo chown -R pi:pi /opt/yfitg-scout/certs
+# Set permissions (replace 'yourusername' with your actual username)
+# The setup script will automatically set the correct user, but if doing manually:
+sudo chown -R $USER:$USER /opt/yfitg-scout/certs
 ```
 
 ### 2.6 Test Device Software
+
+**On Linux (Raspberry Pi):**
 
 ```bash
 # Test manually first
@@ -220,6 +225,32 @@ python main.py
 
 # Press Ctrl+C to stop
 ```
+
+**On Windows (Development/Testing):**
+
+```powershell
+# Navigate to device directory
+cd device
+
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create necessary directories
+New-Item -ItemType Directory -Force -Path logs, reports, templates, certs, models, assets\animations
+
+# Copy and configure
+Copy-Item config.example.json .config.json
+# Edit .config.json with your MQTT and API settings
+
+# Run the device software
+python main.py
+```
+
+**Note:** On Windows, the software will automatically use the current directory instead of `/opt/yfitg-scout/`. You can also set the `YFITG_SCOUT_BASE_DIR` environment variable to specify a custom base directory.
 
 ### 2.7 Enable Service
 
@@ -475,7 +506,9 @@ sudo mkdir -p /opt/yfitg-scout/assets/animations
 sudo cp frame_*.png /opt/yfitg-scout/assets/animations/
 
 # Set permissions
-sudo chown -R pi:pi /opt/yfitg-scout/assets
+# Replace 'yourusername' with your actual username
+sudo chown -R yourusername:yourusername /opt/yfitg-scout/assets
+# Or if you're not sure, the setup script will automatically detect and set the correct user
 ```
 
 ### 6.3 Set Up Database for Portal (Optional)

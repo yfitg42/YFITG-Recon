@@ -5,6 +5,7 @@ Report Generator - Creates YFITG-branded PDF reports.
 import hashlib
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
@@ -16,6 +17,22 @@ from weasyprint import HTML, CSS
 from llm_summarizer import LLMSummarizer
 
 logger = logging.getLogger(__name__)
+
+
+def get_base_dir() -> Path:
+    """Get the base directory for YFITG Scout files."""
+    env_dir = os.environ.get('YFITG_SCOUT_BASE_DIR')
+    if env_dir:
+        return Path(env_dir)
+    
+    linux_path = Path('/opt/yfitg-scout')
+    if linux_path.exists():
+        return linux_path
+    
+    return Path(__file__).parent.absolute()
+
+
+BASE_DIR = get_base_dir()
 
 # YFITG Brand Colors
 YFITG_COLORS = {
@@ -31,8 +48,8 @@ class ReportGenerator:
     """Generates branded PDF reports from scan results."""
     
     def __init__(self):
-        self.template_dir = Path("/opt/yfitg-scout/templates")
-        self.output_dir = Path("/opt/yfitg-scout/reports")
+        self.template_dir = BASE_DIR / 'templates'
+        self.output_dir = BASE_DIR / 'reports'
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.llm = None  # Will be initialized with config if needed
@@ -46,7 +63,8 @@ class ReportGenerator:
             # Load config for LLM
             try:
                 import json
-                with open("/opt/yfitg-scout/.config.json", 'r') as f:
+                config_path = BASE_DIR / '.config.json'
+                with open(config_path, 'r') as f:
                     config = json.load(f)
                     self.llm = LLMSummarizer(config.get('llm', {}))
             except:

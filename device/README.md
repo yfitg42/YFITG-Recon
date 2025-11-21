@@ -55,3 +55,33 @@ sudo systemctl status yfitg-scout
 journalctl -u yfitg-scout -f
 ```
 
+## Windows Development
+
+For development and testing on Windows:
+
+```powershell
+# Navigate to device directory
+cd device
+
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create necessary directories
+New-Item -ItemType Directory -Force -Path logs, reports, templates, certs, models, assets\animations
+
+# Copy and configure
+Copy-Item config.example.json .config.json
+# Edit .config.json with your settings
+
+# Run the device software
+python main.py
+```
+
+**Note:** The software automatically detects Windows and uses the current directory instead of `/opt/yfitg-scout/`. You can override this by setting the `YFITG_SCOUT_BASE_DIR` environment variable.
+
+**Important:** Some features (GPIO button, e-Ink display) will not work on Windows and will use mock implementations.
+

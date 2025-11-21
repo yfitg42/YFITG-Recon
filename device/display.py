@@ -3,6 +3,7 @@ e-Ink Display Controller - Handles status display and animations.
 """
 
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Dict, Optional
@@ -10,6 +11,22 @@ from typing import Dict, Optional
 from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
+
+
+def get_base_dir() -> Path:
+    """Get the base directory for YFITG Scout files."""
+    env_dir = os.environ.get('YFITG_SCOUT_BASE_DIR')
+    if env_dir:
+        return Path(env_dir)
+    
+    linux_path = Path('/opt/yfitg-scout')
+    if linux_path.exists():
+        return linux_path
+    
+    return Path(__file__).parent.absolute()
+
+
+BASE_DIR = get_base_dir()
 
 
 class DisplayController:
@@ -56,7 +73,7 @@ class DisplayController:
     def _load_animation_frames(self) -> list:
         """Load animation frames from assets directory."""
         frames = []
-        assets_dir = Path("/opt/yfitg-scout/assets/animations")
+        assets_dir = BASE_DIR / 'assets' / 'animations'
         
         if assets_dir.exists():
             frame_files = sorted(assets_dir.glob("frame_*.png"))

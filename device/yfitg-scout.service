@@ -6,6 +6,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=pi
+# Note: The setup script will automatically update this User value
+# If you need to change it manually, replace 'pi' with your username
 WorkingDirectory=/opt/yfitg-scout
 Environment="PATH=/opt/yfitg-scout/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ExecStart=/opt/yfitg-scout/.venv/bin/python /opt/yfitg-scout/main.py

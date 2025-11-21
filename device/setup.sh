@@ -46,8 +46,29 @@ systemctl daemon-reload
 
 # Set permissions
 echo "Setting permissions..."
-chown -R pi:pi /opt/yfitg-scout
+# Detect the user who ran sudo, or fall back to current user
+SCOUT_USER="${SUDO_USER:-$USER}"
+if [ -z "$SCOUT_USER" ] || [ "$SCOUT_USER" = "root" ]; then
+    # If we can't determine the user, try common defaults
+    if id "pi" &>/dev/null; then
+        SCOUT_USER="pi"
+    else
+        # Get the first non-root user
+        SCOUT_USER=$(getent passwd | awk -F: '$3 >= 1000 && $1 != "nobody" {print $1; exit}')
+        if [ -z "$SCOUT_USER" ]; then
+            echo "Warning: Could not determine user. Using 'root' (not recommended)."
+            SCOUT_USER="root"
+        fi
+    fi
+fi
+echo "Using user: $SCOUT_USER"
+chown -R "$SCOUT_USER:$SCOUT_USER" /opt/yfitg-scout
 chmod +x /opt/yfitg-scout/main.py
+
+# Update systemd service file with the correct user
+echo "Updating systemd service with user: $SCOUT_USER"
+sed -i "s/^User=.*/User=$SCOUT_USER/" /etc/systemd/system/yfitg-scout.service
+systemctl daemon-reload
 
 echo ""
 echo "Setup complete!"

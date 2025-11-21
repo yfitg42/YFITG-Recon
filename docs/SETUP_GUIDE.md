@@ -136,7 +136,7 @@ sudo raspi-config
 ```bash
 # Clone repository (or copy files)
 cd ~
-git clone <your-repo-url> YFITG-Recon
+git clone https://github.com/yfitg42/YFITG-Recon
 cd YFITG-Recon/device
 
 # Run setup script

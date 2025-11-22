@@ -30,6 +30,22 @@ apt-get install -y nmap nikto python3-dev libssl-dev git python3-spidev
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip install --upgrade pip
+
+# Remove any Jetson.GPIO or incorrect RPi.GPIO packages first
+echo "Cleaning up GPIO packages..."
+pip uninstall -y Jetson.GPIO RPi.GPIO 2>/dev/null || true
+
+# Install correct RPi.GPIO for Raspberry Pi (not Jetson compatibility layer)
+echo "Installing RPi.GPIO for Raspberry Pi..."
+pip install --no-deps RPi.GPIO || {
+    # If pip install fails, try system package
+    apt-get install -y python3-rpi.gpio
+    # Link system package to venv if needed
+    if [ -f /usr/lib/python3/dist-packages/RPi/GPIO/__init__.py ]; then
+        ln -sf /usr/lib/python3/dist-packages/RPi /opt/yfitg-scout/.venv/lib/python3.*/site-packages/ 2>/dev/null || true
+    fi
+}
+
 pip install -r requirements.txt
 
 # Install Waveshare e-Paper library (optional, for e-Ink display)

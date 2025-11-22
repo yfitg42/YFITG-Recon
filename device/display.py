@@ -295,9 +295,11 @@ class DisplayController:
         try:
             if hasattr(self.display, 'display'):
                 # Convert to display format if needed
-                if self.display_type == 'waveshare_epd':
+                if self.display_type == 'waveshare_epd' and hasattr(self.display, 'getbuffer'):
+                    # Real Waveshare display - needs getbuffer
                     self.display.display(self.display.getbuffer(img))
                 else:
+                    # Mock display or other display type - pass image directly
                     self.display.display(img)
             else:
                 # Mock display - just log
@@ -317,4 +319,8 @@ class MockDisplay:
     def display(self, img):
         """Mock display - no-op."""
         pass
+    
+    def getbuffer(self, img):
+        """Mock getbuffer - returns the image as-is for compatibility."""
+        return img
 

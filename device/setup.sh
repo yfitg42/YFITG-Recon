@@ -35,8 +35,36 @@ apt-get install -y nmap nikto python3-dev libssl-dev
 # Copy Python source files
 echo "Copying Python source files..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp "$SCRIPT_DIR"/*.py /opt/yfitg-scout/
-cp "$SCRIPT_DIR"/__init__.py /opt/yfitg-scout/ 2>/dev/null || true
+echo "Script directory: $SCRIPT_DIR"
+
+# Verify we're in the right place
+if [ ! -f "$SCRIPT_DIR/main.py" ]; then
+    echo "Error: main.py not found in $SCRIPT_DIR"
+    echo "Please run this script from the device directory"
+    exit 1
+fi
+
+# Copy all Python files
+echo "Copying Python files from $SCRIPT_DIR to /opt/yfitg-scout/..."
+for pyfile in "$SCRIPT_DIR"/*.py; do
+    if [ -f "$pyfile" ]; then
+        filename=$(basename "$pyfile")
+        echo "  Copying $filename..."
+        cp "$pyfile" /opt/yfitg-scout/
+    fi
+done
+
+# Verify main.py was copied
+if [ ! -f /opt/yfitg-scout/main.py ]; then
+    echo "Error: main.py was not copied successfully"
+    echo "Source directory: $SCRIPT_DIR"
+    echo "Files in source:"
+    ls -la "$SCRIPT_DIR"/*.py || echo "No .py files found"
+    echo "Destination directory: /opt/yfitg-scout/"
+    ls -la /opt/yfitg-scout/ || echo "Directory does not exist"
+    exit 1
+fi
+echo "Successfully copied Python files"
 
 # Copy templates directory
 if [ -d "$SCRIPT_DIR/templates" ]; then

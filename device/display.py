@@ -78,16 +78,43 @@ class DisplayController:
                 try:
                     from waveshare_epd import epd7in5_V2
                     try:
+                        # Try to help the library detect the Pi model if needed
+                        # Check if we can read the model info
+                        try:
+                            with open('/proc/cpuinfo', 'r') as f:
+                                cpuinfo = f.read()
+                                if 'Raspberry Pi' in cpuinfo or 'BCM' in cpuinfo:
+                                    logger.debug("Raspberry Pi detected in /proc/cpuinfo")
+                        except:
+                            pass
+                        
                         display = epd7in5_V2.EPD()
                         display.init()
                         logger.info("Initialized Waveshare e-Ink display")
                         return display
+                    except RuntimeError as e:
+                        # Import succeeded but initialization failed
+                        error_msg = str(e)
+                        if "soc peripheral base address" in error_msg.lower() or "cannot determine" in error_msg.lower():
+                            logger.warning(f"Waveshare library cannot detect Raspberry Pi model: {e}")
+                            logger.warning("This usually means:")
+                            logger.warning("  1. Running on non-Raspberry Pi hardware")
+                            logger.warning("  2. Missing /proc/device-tree or /proc/cpuinfo")
+                            logger.warning("  3. Need to update Waveshare library or use different version")
+                            logger.info("Using mock display")
+                        else:
+                            logger.warning(f"Waveshare library initialization failed: {e}")
+                            logger.info("Using mock display")
+                        return MockDisplay(self.width, self.height)
                     except Exception as e:
                         # Import succeeded but initialization failed (hardware not connected, etc.)
                         error_msg = str(e)
                         # Check for common errors that indicate hardware/permission issues
                         if "pin factory" in error_msg.lower() or "gpio" in error_msg.lower():
                             logger.warning(f"GPIO/hardware not available for display: {e}")
+                        elif "soc peripheral" in error_msg.lower() or "cannot determine" in error_msg.lower():
+                            logger.warning(f"Waveshare library cannot detect hardware: {e}")
+                            logger.warning("Try: sudo apt-get install python3-rpi.gpio && sudo reboot")
                         else:
                             logger.warning(f"Waveshare library found but initialization failed: {e}")
                         logger.info("Using mock display")

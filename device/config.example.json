@@ -6,8 +6,8 @@
     "username": "device_user",
     "password": "device_password",
     "ca_cert": "/opt/yfitg-scout/certs/ca.crt",
-    "client_cert": "/opt/yfitg-scout/certs/client.crt",
-    "client_key": "/opt/yfitg-scout/certs/client.key"
+    "client_cert": "",
+    "client_key": ""
   },
   "collector": {
     "api_url": "https://api.example.com/reports",
@@ -34,4 +34,3 @@
     "long_press_duration": 3.0
   }
 }
-

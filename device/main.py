@@ -107,14 +107,31 @@ class ScoutDevice:
         """Configure MQTT client with TLS."""
         mqtt_config = self.config.get('mqtt', {})
         
-        # TLS configuration
-        if mqtt_config.get('ca_cert'):
-            self.mqtt_client.tls_set(
-                ca_certs=mqtt_config['ca_cert'],
-                certfile=mqtt_config.get('client_cert'),
-                keyfile=mqtt_config.get('client_key'),
-                tls_version=2  # TLS 1.2
-            )
+        # TLS configuration - only set up if CA cert file exists
+        ca_cert = mqtt_config.get('ca_cert', '')
+        if ca_cert and Path(ca_cert).exists():
+            # Only include client cert/key if they're set and exist
+            client_cert = mqtt_config.get('client_cert', '')
+            client_key = mqtt_config.get('client_key', '')
+            
+            # Remove empty strings (paho-mqtt doesn't like them)
+            tls_kwargs = {
+                'ca_certs': ca_cert,
+                'tls_version': 2  # TLS 1.2
+            }
+            
+            # Only add client cert/key if they exist and are not empty
+            if client_cert and Path(client_cert).exists():
+                tls_kwargs['certfile'] = client_cert
+            if client_key and Path(client_key).exists():
+                tls_kwargs['keyfile'] = client_key
+            
+            self.mqtt_client.tls_set(**tls_kwargs)
+            logger.info(f"TLS configured with CA cert: {ca_cert}")
+        elif ca_cert:
+            logger.warning(f"CA certificate file not found: {ca_cert}. TLS will not be enabled.")
+        else:
+            logger.info("No CA certificate configured. TLS will not be enabled.")
         
         self.mqtt_client.username_pw_set(
             mqtt_config.get('username'),

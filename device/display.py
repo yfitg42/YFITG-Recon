@@ -56,12 +56,21 @@ class DisplayController:
                 # Try to import waveshare library
                 try:
                     from waveshare_epd import epd7in5_V2
-                    display = epd7in5_V2.EPD()
-                    display.init()
-                    logger.info("Initialized Waveshare e-Ink display")
-                    return display
-                except ImportError:
-                    logger.info("Waveshare library not available, using mock display")
+                    try:
+                        display = epd7in5_V2.EPD()
+                        display.init()
+                        logger.info("Initialized Waveshare e-Ink display")
+                        return display
+                    except Exception as e:
+                        # Import succeeded but initialization failed (hardware not connected, etc.)
+                        logger.warning(f"Waveshare library found but initialization failed: {e}")
+                        logger.info("Using mock display")
+                        return MockDisplay(self.width, self.height)
+                except ImportError as e:
+                    logger.info(f"Waveshare library not available (ImportError: {e}), using mock display")
+                    return MockDisplay(self.width, self.height)
+                except Exception as e:
+                    logger.info(f"Waveshare library error ({type(e).__name__}: {e}), using mock display")
                     return MockDisplay(self.width, self.height)
             else:
                 logger.warning(f"Unknown display type: {self.display_type}, using mock")

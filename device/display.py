@@ -61,7 +61,7 @@ class DisplayController:
                     logger.info("Initialized Waveshare e-Ink display")
                     return display
                 except ImportError:
-                    logger.warning("Waveshare library not available, using mock display")
+                    logger.info("Waveshare library not available, using mock display")
                     return MockDisplay(self.width, self.height)
             else:
                 logger.warning(f"Unknown display type: {self.display_type}, using mock")

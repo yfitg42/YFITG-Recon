@@ -22,15 +22,43 @@ echo "Creating virtual environment..."
 python3 -m venv /opt/yfitg-scout/.venv
 source /opt/yfitg-scout/.venv/bin/activate
 
+# Install system dependencies (if needed)
+echo "Installing system dependencies..."
+apt-get update
+apt-get install -y nmap nikto python3-dev libssl-dev git
+
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Install system dependencies (if needed)
-echo "Installing system dependencies..."
-apt-get update
-apt-get install -y nmap nikto python3-dev libssl-dev
+# Install Waveshare e-Paper library (optional, for e-Ink display)
+echo "Installing Waveshare e-Paper library (optional)..."
+if pip install waveshare-epd 2>/dev/null; then
+    echo "Successfully installed waveshare-epd"
+else
+    echo "Warning: Could not install waveshare-epd via pip. Trying alternative method..."
+    # Install setuptools if not already installed (needed for setup.py)
+    pip install setuptools wheel 2>/dev/null || true
+    # Try installing from GitHub as fallback
+    SAVE_DIR=$(pwd)
+    cd /tmp
+    if [ -d "e-Paper" ]; then
+        rm -rf e-Paper
+    fi
+    if git clone https://github.com/waveshare/e-Paper.git 2>/dev/null; then
+        cd e-Paper/RaspberryPi_JetsonNano/python
+        # Make sure we're using the venv's python
+        if /opt/yfitg-scout/.venv/bin/python setup.py install 2>/dev/null; then
+            echo "Successfully installed Waveshare library from GitHub"
+        else
+            echo "Warning: Could not install Waveshare library from GitHub. Display will use mock mode."
+        fi
+    else
+        echo "Warning: Could not clone Waveshare repository. Display will use mock mode."
+    fi
+    cd "$SAVE_DIR"
+fi
 
 # Copy Python source files
 echo "Copying Python source files..."

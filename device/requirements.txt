@@ -10,4 +10,6 @@ Pillow>=10.1.0
 RPi.GPIO>=0.7.1
 cryptography>=41.0.7
 python-dotenv>=1.0.0
+spidev>=3.6
+gpiozero>=1.6.2
 

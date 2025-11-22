@@ -53,6 +53,27 @@ class DisplayController:
         """Initialize e-Ink display hardware."""
         try:
             if self.display_type == 'waveshare_epd':
+                # Pre-initialize gpiozero pin factory before importing Waveshare library
+                # This prevents the "Unable to load any default pin factory" error
+                try:
+                    import gpiozero
+                    # Try to set the pin factory explicitly
+                    try:
+                        from gpiozero.pins.rpigpio import RPiGPIOFactory
+                        gpiozero.Device.pin_factory = RPiGPIOFactory()
+                        logger.debug("Set gpiozero pin factory to RPiGPIO")
+                    except Exception:
+                        # If RPiGPIOFactory fails, try native factory
+                        try:
+                            from gpiozero.pins.native import NativeFactory
+                            gpiozero.Device.pin_factory = NativeFactory()
+                            logger.debug("Set gpiozero pin factory to Native")
+                        except Exception:
+                            # Let gpiozero use its default detection
+                            pass
+                except ImportError:
+                    pass  # gpiozero not available, will fail later
+                
                 # Try to import waveshare library
                 try:
                     from waveshare_epd import epd7in5_V2
@@ -63,14 +84,25 @@ class DisplayController:
                         return display
                     except Exception as e:
                         # Import succeeded but initialization failed (hardware not connected, etc.)
-                        logger.warning(f"Waveshare library found but initialization failed: {e}")
+                        error_msg = str(e)
+                        # Check for common errors that indicate hardware/permission issues
+                        if "pin factory" in error_msg.lower() or "gpio" in error_msg.lower():
+                            logger.warning(f"GPIO/hardware not available for display: {e}")
+                        else:
+                            logger.warning(f"Waveshare library found but initialization failed: {e}")
                         logger.info("Using mock display")
                         return MockDisplay(self.width, self.height)
                 except ImportError as e:
                     logger.info(f"Waveshare library not available (ImportError: {e}), using mock display")
                     return MockDisplay(self.width, self.height)
                 except Exception as e:
-                    logger.info(f"Waveshare library error ({type(e).__name__}: {e}), using mock display")
+                    error_msg = str(e)
+                    # Handle gpiozero pin factory errors
+                    if "pin factory" in error_msg.lower():
+                        logger.warning(f"GPIO hardware not detected (gpiozero error): {e}")
+                        logger.info("Using mock display - ensure SPI is enabled and hardware is connected")
+                    else:
+                        logger.info(f"Waveshare library error ({type(e).__name__}: {e}), using mock display")
                     return MockDisplay(self.width, self.height)
             else:
                 logger.warning(f"Unknown display type: {self.display_type}, using mock")

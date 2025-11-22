@@ -25,7 +25,7 @@ source /opt/yfitg-scout/.venv/bin/activate
 # Install system dependencies (if needed)
 echo "Installing system dependencies..."
 apt-get update
-apt-get install -y nmap nikto python3-dev libssl-dev git
+apt-get install -y nmap nikto python3-dev libssl-dev git python3-spidev
 
 # Install Python dependencies
 echo "Installing Python dependencies..."

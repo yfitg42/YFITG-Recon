@@ -9,12 +9,16 @@ import time
 logger = logging.getLogger(__name__)
 
 # Try to import RPi.GPIO, fallback to mock for development
+GPIO_AVAILABLE = False
+GPIO = None
 try:
     import RPi.GPIO as GPIO
     GPIO_AVAILABLE = True
-except ImportError:
+except (ImportError, Exception) as e:
+    # Catch all exceptions including Jetson.GPIO initialization errors
     GPIO_AVAILABLE = False
-    logger.warning("RPi.GPIO not available, using mock GPIO")
+    GPIO = None
+    logger.warning(f"RPi.GPIO not available ({type(e).__name__}: {e}), using mock GPIO")
 
 
 class ButtonHandler:
@@ -48,6 +52,9 @@ class ButtonHandler:
             logger.info(f"GPIO pin {self.gpio_pin} configured for button input")
         except Exception as e:
             logger.error(f"Failed to setup GPIO: {e}")
+            # Disable GPIO if setup fails
+            global GPIO_AVAILABLE
+            GPIO_AVAILABLE = False
     
     def start(self):
         """Start monitoring button presses."""

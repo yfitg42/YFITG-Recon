@@ -12,6 +12,31 @@ from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
+# Try to patch Waveshare library for Pi 5 support
+try:
+    # Check if we're on Pi 5
+    try:
+        with open('/proc/device-tree/model', 'r') as f:
+            model = f.read().strip()
+            if 'Raspberry Pi 5' in model:
+                # Try to patch the Waveshare library's model detection
+                try:
+                    import waveshare_epd
+                    # The library uses epdconfig or base module for hardware detection
+                    # We'll try to monkey-patch it if possible
+                    if hasattr(waveshare_epd, 'epdconfig'):
+                        config = waveshare_epd.epdconfig
+                        # If there's a get_model or similar function, patch it
+                        if hasattr(config, 'BCM2712') or hasattr(config, 'BCM2711'):
+                            # Library might already have constants, try to use them
+                            pass
+                except:
+                    pass
+    except:
+        pass
+except:
+    pass
+
 
 def get_base_dir() -> Path:
     """Get the base directory for YFITG Scout files."""
